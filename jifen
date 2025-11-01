@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>积分兑换系统</title>
+  <!-- Tailwind CSS v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- GSAP 动画动画库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#F97316',
+            dark: '#1E293B',
+            light: '#F8FAFC',
+            success: '#10B981',
+            warning: '#FBBF24',
+            danger: '#EF4444'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'bounce-slow': 'bounce 2s infinite',
+            'pulse-slow': 'pulse 3s infinite',
+            'spin-slow': 'spin 3s linear infinite',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .text-shadow-lg {
+        text-shadow: 0 4px 8px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08);
+      }
+      .bg-glass {
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+      .btn-3d {
+        transform-style: preserve-3d;
+        transform: perspective(1000px);
+        transition: all 0.2s ease;
+      }
+      .btn-3d:hover {
+        transform: perspective(1000px) translateZ(5px);
+      }
+      .btn-3d:active {
+        transform: perspective(1000px) translateZ(-5px);
+      }
+      .btn-3d::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: inherit;
+        transform: translateZ(-10px);
+        filter: brightness(0.8);
+      }
+      .item-card {
+        transition: all 0.3s ease;
+      }
+      .item-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .item-card.disabled {
+        opacity: 0.6;
+        transform: scale(0.95);
+        pointer-events: none;
+      }
+      .points-animation {
+        position: absolute;
+        font-weight: bold;
+        color: #10B981;
+        animation: pointsFly 1s ease-out forwards;
+        pointer-events: none;
+      }
+      @keyframes pointsFly {
+        0% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+      }
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #f00;
+        animation: confetti-fall 3s ease-in-out infinite;
+      }
+      @keyframes confetti-fall {
+        0% {
+          transform: translateY(-100vh) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen font-sans text-dark">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white shadow-md sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-star text-yellow-500 text-2xl"></i>
+        <h1 class="text-xl font-bold text-primary">积分兑换中心</h1>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center bg-blue-50 px-3 py-1.5 rounded-full">
+          <i class="fa fa-coins text-yellow-500 mr-2"></i>
+          <span class="font-bold" id="points-display">0</span>
+          <span class="text-sm text-gray-500 ml-1">积分</span>
+        </div>
+        <button id="redeem-code-btn" class="btn-3d relative bg-secondary hover:bg-orange-500 text-white px-4 py-2 rounded-full font-medium shadow-lg flex items-center transition-all">
+          <i class="fa fa-key mr-2"></i>
+          兑换码
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="container mx-auto px-4 py-8">
+    <!-- 欢迎区域 -->
+    <section class="text-center mb-12">
+      <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-primary mb-4 text-shadow">欢迎来到积分兑换中心</h2>
+      <p class="text-gray-600 max-w-2xl mx-auto">输入兑换码获取积分，兑换丰富奖品！</p>
+    </section>
+
+    <!-- 兑换码输入模态框 -->
+    <div id="code-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-primary">输入兑换码</h3>
+          <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <div class="mb-4">
+          <label for="code-input" class="block text-gray-700 mb-2">兑换码</label>
+          <input type="text" id="code-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="请输入兑换码">
+        </div>
+        <div class="flex justify-end">
+          <button id="submit-code" class="bg-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+            提交
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-glass px-6 py-3 rounded-lg shadow-lg z-50 hidden">
+      <p id="toast-message" class="text-center font-medium text-lg"></p>
+    </div>
+    
+    <!-- 兑换成功弹窗 -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all scale-95 opacity-0" id="success-modal-content">
+        <div class="text-center">
+          <div class="w-20 h-20 mx-auto mb-4 bg-success bg-opacity-20 rounded-full flex items-center justify-center">
+            <i class="fa fa-check text-4xl text-success"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-dark mb-2">兑换成功！</h3>
+          <p class="text-gray-600 mb-6" id="success-message">恭喜您成功兑换商品！</p>
+          <button id="close-success-modal" class="bg-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+            确定
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 商品展示区域 -->
+    <section class="mb-12">
+      <h3 class="text-2xl font-bold mb-6 flex items-center">
+        <i class="fa fa-gift text-secondary mr-2"></i>
+        可兑换商品
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- 商品1 - 奶茶 -->
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden" data-cost="5">
+          <div class="relative">
+            <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1355313085301391395~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1777529600&x-signature=vmPJh1Nu5uK6U6yJhwv0TBUrw5c%3D" alt="红豆奶茶" class="w-full h-48 object-contain p-4">
+            <div class="absolute top-2 right-2 bg-secondary text-white text-xs font-bold px-2 py-1 rounded-full">
+              5积分
+            </div>
+          </div>
+          <div class="p-4">
+            <h4 class="font-bold text-lg mb-1">红豆奶茶</h4>
+            <p class="text-gray-600 text-sm mb-4">香甜可口的红豆奶茶</p>
+            <button class="redeem-btn w-full bg-primary hover:bg-blue-600 text-white py-2 rounded-lg transition-colors">
+              兑换
+            </button>
+          </div>
+        </div>
+
+        <!-- 商品2 - 敬请期待 -->
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
+              <span class="text-2xl font-bold text-gray-400">敬请期待</span>
+            </div>
+            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/8a6e0784318f4efe806df1b1e28a59bf~tplv-a9rns2rl98-image.image?rcl=2025110114033728C1FBDACDC9AB0E94F0&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1764569028&x-signature=VfL39E7PkDgfk5jYQAgMpeNxJ6E%3D" alt="敬请期待" class="w-full h-48 object-contain p-4 opacity-30">
+          </div>
+          <div class="p-4">
+            <h4 class="font-bold text-lg mb-1 text-gray-400">更多商品</h4>
+            <p class="text-gray-400 text-sm mb-4">即将上线，敬请期待</p>
+          </div>
+        </div>
+
+        <!-- 商品3 - 敬请期待 -->
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
+              <span class="text-2xl font-bold text-gray-400">敬请期待</span>
+            </div>
+            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a1b34432cde544d78a2689e7840db5bb~tplv-a9rns2rl98-image.image?rcl=2025110114033728C1FBDACDC9AB0E94F0&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1764569028&x-signature=RaBd3LdzK%2BhTSd96%2Bt2Riqp1ZxE%3D" alt="敬请期待" class="w-full h-48 object-contain p-4 opacity-30">
+          </div>
+          <div class="p-4">
+            <h4 class="font-bold text-lg mb-1 text-gray-400">更多商品</h4>
+            <p class="text-gray-400 text-sm mb-4">即将上线，敬请期待</p>
+          </div>
+        </div>
+
+        <!-- 商品4 - 敬请期待 -->
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
+              <span class="text-2xl font-bold text-gray-400">敬请期待</span>
+            </div>
+            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/66262788512f45dfaf48a88a7abbe03f~tplv-a9rns2rl98-image.image?rcl=2025110114033728C1FBDACDC9AB0E94F0&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1764569029&x-signature=fGyE0heweWVdNju1R7UwfCvj8gQ%3D" alt="敬请期待" class="w-full h-48 object-contain p-4 opacity-30">
+          </div>
+          <div class="p-4">
+            <h4 class="font-bold text-lg mb-1 text-gray-400">更多商品</h4>
+            <p class="text-gray-400 text-sm mb-4">即将上线，敬请期待</p>
+          </div>
+        </div>
+
+        <!-- 商品5 - 敬请期待 -->
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
+              <span class="text-2xl font-bold text-gray-400">敬请期待</span>
+            </div>
+            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e68922eb55674479a5ee6513fcaa2fa9~tplv-a9rns2rl98-image.image?rcl=2025110114033728C1FBDACDC9AB0E94F0&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1764569028&x-signature=1MfYu180kkTldq%2Fz57jc7EfkP3U%3D" alt="敬请期待" class="w-full h-48 object-contain p-4 opacity-30">
+          </div>
+          <div class="p-4">
+            <h4 class="font-bold text-lg mb-1 text-gray-400">更多商品</h4>
+            <p class="text-gray-400 text-sm mb-4">即将上线，敬请期待</p>
+          </div>
+        </div>
+
+        <!-- 商品6 - 敬请期待 -->
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
+              <span class="text-2xl font-bold text-gray-400">敬请期待</span>
+            </div>
+            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/aecf4889eaa3419fac329ff2b018ad7d~tplv-a9rns2rl98-image.image?rcl=2025110114033728C1FBDACDC9AB0E94F0&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1764569030&x-signature=N8Zk8KJ%2F6UbFaE6rDDAD2PeG%2FiI%3D" alt="敬请期待" class="w-full h-48 object-contain p-4 opacity-30">
+          </div>
+          <div class="p-4">
+            <h4 class="font-bold text-lg mb-1 text-gray-400">更多商品</h4>
+            <p class="text-gray-400 text-sm mb-4">即将上线，敬请期待</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white py-6">
+    <div class="container mx-auto px-4 text-center">
+      <p>张小艺积分兑换中心 | 所有权利均归本人</p>
+    </div>
+  </footer>
+
+  <script>
+    // 初始化变量
+    let userPoints = 0;
+    const POINTS_CODE = '666';
+    
+    // DOM元素
+    const pointsDisplay = document.getElementById('points-display');
+    const redeemCodeBtn = document.getElementById('redeem-code-btn');
+    const codeModal = document.getElementById('code-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const codeInput = document.getElementById('code-input');
+    const submitCodeBtn = document.getElementById('submit-code');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+    const redeemBtns = document.querySelectorAll('.redeem-btn');
+    const successModal = document.getElementById('success-modal');
+    const successModalContent = document.getElementById('success-modal-content');
+    const successMessage = document.getElementById('success-message');
+    const closeSuccessModalBtn = document.getElementById('close-success-modal');
+    
+    // 更新积分显示
+    function updatePointsDisplay() {
+      pointsDisplay.textContent = userPoints;
+      
+      // 检查商品是否可兑换
+      document.querySelectorAll('.item-card').forEach(card => {
+        const cost = parseInt(card.dataset.cost);
+        if (userPoints >= cost) {
+          card.classList.remove('disabled');
+        } else {
+          card.classList.add('disabled');
+        }
+      });
+    }
+    
+    // 显示提示消息
+    function showToast(message, type = 'info') {
+      toastMessage.textContent = message;
+      
+      // 设置提示类型样式
+      toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-glass px-6 py-3 rounded-lg shadow-lg z-50';
+      
+      if (type === 'success') {
+        toast.classList.add('border-l-4', 'border-success');
+      } else if (type === 'error') {
+        toast.classList.add('border-l-4', 'border-danger');
+      } else if (type === 'warning') {
+        toast.classList.add('border-l-4', 'border-warning');
+      }
+      
+      // 显示提示
+      toast.classList.remove('hidden');
+      
+      // 3秒后隐藏
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3000);
+    }
+    
+    // 积分动画
+    function createPointsAnimation(x, y, points) {
+      const pointsEl = document.createElement('div');
+      pointsEl.className = 'points-animation';
+      pointsEl.textContent = `+${points}`;
+      pointsEl.style.left = `${x}px`;
+      pointsEl.style.top = `${y}px`;
+      document.body.appendChild(pointsEl);
+      
+      // 动画结束后移除元素
+      setTimeout(() => {
+        document.body.removeChild(pointsEl);
+      }, 1000);
+    }
+    
+    // 创建庆祝效果
+    function createCelebration(x, y) {
+      const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+      
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = `${x}px`;
+        confetti.style.top = `${y}px`;
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = `${Math.random() * 10 + 5}px`;
+        confetti.style.height = `${Math.random() * 10 + 5}px`;
+        confetti.style.opacity = Math.random() * 0.7 + 0.3;
+        confetti.style.animationDuration = `${Math.random() * 2 + 2}s`;
+        confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+        
+        // 随机方向
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 100 + 50;
+        confetti.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
+        
+        document.body.appendChild(confetti);
+        
+        // 动画结束后移除元素
+        setTimeout(() => {
+          document.body.removeChild(confetti);
+        }, 5000);
+      }
+    }
+    
+    // 兑换码按钮点击事件
+    redeemCodeBtn.addEventListener('click', () => {
+      codeModal.classList.remove('hidden');
+      codeInput.focus();
+    });
+    
+    // 关闭模态框
+    closeModalBtn.addEventListener('click', () => {
+      codeModal.classList.add('hidden');
+    });
+    
+    // 点击模态框外部关闭
+    codeModal.addEventListener('click', (e) => {
+      if (e.target === codeModal) {
+        codeModal.classList.add('hidden');
+      }
+    });
+    
+    // 提交兑换码
+    submitCodeBtn.addEventListener('click', () => {
+      const code = codeInput.value.trim();
+      
+      if (code === POINTS_CODE) {
+        // 增加积分
+        userPoints += 1;
+        updatePointsDisplay();
+        
+        // 显示成功消息
+        showToast('积分增加成功！', 'success');
+        
+        // 创建积分动画
+        const btnRect = redeemCodeBtn.getBoundingClientRect();
+        const x = btnRect.left + btnRect.width / 2;
+        const y = btnRect.top + btnRect.height / 2;
+        createPointsAnimation(x, y, 1);
+        
+        // 关闭模态框
+        codeModal.classList.add('hidden');
+        codeInput.value = '';
+      } else {
+        // 显示错误消息
+        showToast('兑换码无效，请重试！', 'error');
+      }
+    });
+    
+    // 按Enter键提交兑换码
+    codeInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        submitCodeBtn.click();
+      }
+    });
+    
+    // 显示兑换成功弹窗
+    function showSuccessModal(message) {
+      successMessage.textContent = message;
+      successModal.classList.remove('hidden');
+      
+      // 添加动画效果
+      setTimeout(() => {
+        successModalContent.classList.remove('scale-95', 'opacity-0');
+        successModalContent.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
+    
+    // 关闭兑换成功弹窗
+    function closeSuccessModal() {
+      successModalContent.classList.remove('scale-100', 'opacity-100');
+      successModalContent.classList.add('scale-95', 'opacity-0');
+      
+      setTimeout(() => {
+        successModal.classList.add('hidden');
+      }, 300);
+    }
+    
+    // 兑换商品
+    redeemBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const card = e.target.closest('.item-card');
+        const cost = parseInt(card.dataset.cost);
+        const itemName = card.querySelector('h4').textContent;
+        
+        if (userPoints >= cost) {
+          // 扣除积分
+          userPoints -= cost;
+          updatePointsDisplay();
+          
+          // 创建庆祝效果
+          const btnRect = btn.getBoundingClientRect();
+          const x = btnRect.left + btnRect.width / 2;
+          const y = btnRect.top + btnRect.height / 2;
+          createCelebration(x, y);
+          
+          // 禁用已兑换的商品
+          card.classList.add('disabled');
+          
+          // 显示兑换成功弹窗
+          showSuccessModal(`恭喜您成功兑换${itemName}！`);
+        } else {
+          // 显示错误消息
+          showToast('积分不足，无法兑换！', 'error');
+        }
+      });
+    });
+    
+    // 关闭兑换成功弹窗
+    closeSuccessModalBtn.addEventListener('click', closeSuccessModal);
+    
+    // 点击弹窗外部关闭
+    successModal.addEventListener('click', (e) => {
+      if (e.target === successModal) {
+        closeSuccessModal();
+      }
+    });
+    
+    // 初始化
+    updatePointsDisplay();
+  </script>
+</body>
+</html>
