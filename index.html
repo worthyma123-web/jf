@@ -39,6 +39,35 @@
   </script>
   
   <style type="text/tailwindcss">
+    /* 响应式调整 */
+    @media (max-width: 640px) {
+      .grid.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      
+      .btn-3d {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+      }
+      
+      #reset-points-btn {
+        padding: 0.5rem;
+      }
+      
+      .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+      
+      h2.text-\[clamp\(1\.5rem\,3vw\,2\.5rem\)\] {
+        font-size: 1.25rem;
+      }
+      
+      h3.text-2xl {
+        font-size: 1.5rem;
+      }
+    }
+    
     @layer utilities {
       .text-shadow {
         text-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -139,6 +168,10 @@
           <i class="fa fa-key mr-2"></i>
           兑换码
         </button>
+        <button id="reset-points-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-full text-sm flex items-center transition-all">
+          <i class="fa fa-refresh mr-1"></i>
+          重置
+        </button>
       </div>
     </div>
   </header>
@@ -209,8 +242,8 @@
             </div>
           </div>
           <div class="p-4">
-            <h4 class="font-bold text-lg mb-1">红豆奶茶</h4>
-            <p class="text-gray-600 text-sm mb-4">香甜可口的红豆奶茶</p>
+            <h4 class="font-bold text-lg mb-1">奶茶</h4>
+            <p class="text-gray-600 text-sm mb-4">香甜可口的奶茶</p>
             <button class="redeem-btn w-full bg-primary hover:bg-blue-600 text-white py-2 rounded-lg transition-colors">
               兑换
             </button>
@@ -293,7 +326,7 @@
   <!-- 页脚 -->
   <footer class="bg-dark text-white py-6">
     <div class="container mx-auto px-4 text-center">
-      <p>张小艺积分兑换中心 | 所有权利均归本人</p>
+      <p>© 2025 积分兑换中心 | 所有权利保留</p>
     </div>
   </footer>
 
@@ -301,6 +334,7 @@
     // 初始化变量
     let userPoints = 0;
     const POINTS_CODE = '666';
+    const STORAGE_KEY = 'points_exchange_system_user_points'; // 使用更具体的键名避免冲突
     
     // DOM元素
     const pointsDisplay = document.getElementById('points-display');
@@ -316,6 +350,105 @@
     const successModalContent = document.getElementById('success-modal-content');
     const successMessage = document.getElementById('success-message');
     const closeSuccessModalBtn = document.getElementById('close-success-modal');
+    const exportPointsBtn = document.getElementById('export-points-btn');
+    const importPointsBtn = document.getElementById('import-points-btn');
+    
+    // 从localStorage加载积分
+    function loadPointsFromStorage() {
+      try {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          if (parsedData && typeof parsedData.points === 'number') {
+            userPoints = parsedData.points;
+            return true;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load points from localStorage:', error);
+      }
+      return false;
+    }
+    
+    // 保存积分到localStorage
+    function savePointsToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          points: userPoints,
+          timestamp: Date.now()
+        }));
+        return true;
+      } catch (error) {
+        console.error('Failed to save points to localStorage:', error);
+        // 如果localStorage保存失败，尝试更新URL参数
+        updateUrlWithPoints();
+        return false;
+      }
+    }
+    
+    // 从URL参数加载积分
+    function loadPointsFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pointsParam = urlParams.get('points');
+      if (pointsParam) {
+        const parsedPoints = parseInt(pointsParam);
+        if (!isNaN(parsedPoints)) {
+          userPoints = parsedPoints;
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    // 更新URL参数
+    function updateUrlWithPoints() {
+      const url = new URL(window.location.href);
+      url.searchParams.set('points', userPoints);
+      window.history.replaceState({}, '', url);
+    }
+    
+    // 导出积分数据
+    function exportPoints() {
+      const data = {
+        points: userPoints,
+        timestamp: Date.now(),
+        version: '1.0'
+      };
+      const dataStr = JSON.stringify(data);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = 'points_data.json';
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      showToast('积分数据已导出', 'success');
+    }
+    
+    // 导入积分数据
+    function importPoints(event) {
+      const fileReader = new FileReader();
+      fileReader.onload = function(event) {
+        try {
+          const parsedData = JSON.parse(event.target.result);
+          if (parsedData && typeof parsedData.points !== undefined) {
+            userPoints = parsedData.points;
+            updatePointsDisplay();
+            updateUrlWithPoints();
+            showToast('积分数据导入成功！', 'success');
+          } else {
+            showToast('无效的数据文件！', 'error');
+          }
+        } catch (error) {
+          showToast('导入失败：' + error.message, 'error');
+        }
+      };
+      fileReader.readAsText(event.target.files[0]);
+      // 重置文件输入，以便可以再次选择同一文件
+      event.target.value = '';
+    }
     
     // 更新积分显示
     function updatePointsDisplay() {
@@ -330,10 +463,13 @@
           card.classList.add('disabled');
         }
       });
+      
+      // 保存积分到localStorage
+      savePointsToStorage();
     }
     
     // 显示提示消息
-    function showToast(message, type = 'info') {
+    function showToast(message, type = 'info', duration = 3000) {
       toastMessage.textContent = message;
       
       // 设置提示类型样式
@@ -350,10 +486,10 @@
       // 显示提示
       toast.classList.remove('hidden');
       
-      // 3秒后隐藏
+      // 指定时间后隐藏
       setTimeout(() => {
         toast.classList.add('hidden');
-      }, 3000);
+      }, duration);
     }
     
     // 积分动画
@@ -515,8 +651,40 @@
       }
     });
     
+    // 重置积分
+    function resetPoints() {
+      if (confirm('确定要重置所有积分吗？此操作不可撤销！')) {
+        userPoints = 0;
+        savePointsToStorage();
+        updatePointsDisplay();
+        showToast('积分已重置为0', 'warning');
+      }
+    }
+    
+    // 重置积分按钮点击事件
+    document.getElementById('reset-points-btn').addEventListener('click', resetPoints);
+    
+    // 导出/导入按钮点击事件
+    exportPointsBtn.addEventListener('click', exportPoints);
+    importPointsBtn.addEventListener('change', importPoints);
+    
     // 初始化
+    // 优先从URL参数加载积分，如果失败则从localStorage加载
+    if (!loadPointsFromUrl()) {
+      loadPointsFromStorage();
+    }
     updatePointsDisplay();
+    // 更新URL参数，确保书签功能正常
+    updateUrlWithPoints();
+    
+    // 检查是否是首次访问，如果是则显示使用提示
+    const firstVisit = localStorage.getItem('first_visit');
+    if (!firstVisit) {
+      setTimeout(() => {
+        showToast('在GitHub Pages上，您可以通过以下方式保存积分：1. 导出数据 2. 将页面添加到书签', 'info', 10000);
+        localStorage.setItem('first_visit', 'false');
+      }, 1000);
+    }
   </script>
 </body>
 </html>
