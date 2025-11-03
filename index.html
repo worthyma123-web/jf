@@ -2,14 +2,13 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>积分兑换系统</title>
   <!-- Tailwind CSS v3 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome -->
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <!-- GSAP 动画动画库 -->
+  <!-- GSAP 动画库 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   
   <script>
@@ -45,13 +44,17 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       
+      .header-actions {
+        gap: 0.5rem;
+      }
+      
       .btn-3d {
-        padding: 0.5rem 1rem;
+        padding: 0.4rem 0.8rem;
         font-size: 0.875rem;
       }
       
-      #reset-points-btn {
-        padding: 0.5rem;
+      #deduct-points-btn {
+        padding: 0.4rem;
       }
       
       .container {
@@ -59,12 +62,16 @@
         padding-right: 0.75rem;
       }
       
-      h2.text-\[clamp\(1\.5rem\,3vw\,2\.5rem\)\] {
+      h2.text-\[clamp<span data-type="inline-math" data-value="MVwuNXJlbVwsM3Z3XCwyXC41cmVt"></span>\] {
         font-size: 1.25rem;
       }
       
       h3.text-2xl {
         font-size: 1.5rem;
+      }
+      
+      .points-display {
+        padding: 0.25rem 0.75rem;
       }
     }
     
@@ -130,6 +137,23 @@
           transform: translateY(-30px);
         }
       }
+      .points-deduct-animation {
+        position: absolute;
+        font-weight: bold;
+        color: #EF4444;
+        animation: pointsDown 1s ease-out forwards;
+        pointer-events: none;
+      }
+      @keyframes pointsDown {
+        0% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+      }
       .confetti {
         position: absolute;
         width: 10px;
@@ -147,6 +171,14 @@
           opacity: 0;
         }
       }
+      .code-success-animation {
+        animation: codeSuccess 0.5s ease-out;
+      }
+      @keyframes codeSuccess {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+      }
     }
   </style>
 </head>
@@ -158,8 +190,8 @@
         <i class="fa fa-star text-yellow-500 text-2xl"></i>
         <h1 class="text-xl font-bold text-primary">积分兑换中心</h1>
       </div>
-      <div class="flex items-center space-x-4">
-        <div class="flex items-center bg-blue-50 px-3 py-1.5 rounded-full">
+      <div class="flex items-center header-actions">
+        <div class="flex items-center bg-blue-50 px-3 py-1.5 rounded-full points-display">
           <i class="fa fa-coins text-yellow-500 mr-2"></i>
           <span class="font-bold" id="points-display">0</span>
           <span class="text-sm text-gray-500 ml-1">积分</span>
@@ -168,9 +200,9 @@
           <i class="fa fa-key mr-2"></i>
           兑换码
         </button>
-        <button id="reset-points-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-full text-sm flex items-center transition-all">
-          <i class="fa fa-refresh mr-1"></i>
-          重置
+        <button id="deduct-points-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-full text-sm flex items-center transition-all">
+          <i class="fa fa-minus-circle mr-1"></i>
+          扣1分
         </button>
       </div>
     </div>
@@ -217,8 +249,8 @@
           <div class="w-20 h-20 mx-auto mb-4 bg-success bg-opacity-20 rounded-full flex items-center justify-center">
             <i class="fa fa-check text-4xl text-success"></i>
           </div>
-          <h3 class="text-2xl font-bold text-dark mb-2">兑换成功！</h3>
-          <p class="text-gray-600 mb-6" id="success-message">恭喜您成功兑换商品！</p>
+          <h3 class="text-2xl font-bold text-dark mb-2">操作成功！</h3>
+          <p class="text-gray-600 mb-6" id="success-message">恭喜您成功兑换积分！</p>
           <button id="close-success-modal" class="bg-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
             确定
           </button>
@@ -250,17 +282,20 @@
           </div>
         </div>
 
-        <!-- 商品2 - 敬请期待 -->
-        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
+        <!-- 新增商品 - 玩平板1小时 -->
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden" data-cost="10">
           <div class="relative">
-            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
-              <span class="text-2xl font-bold text-gray-400">敬请期待</span>
+            <img src="https://picsum.photos/id/160/400/300" alt="玩平板1小时" class="w-full h-48 object-contain p-4">
+            <div class="absolute top-2 right-2 bg-secondary text-white text-xs font-bold px-2 py-1 rounded-full">
+              10积分
             </div>
-            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/8a6e0784318f4efe806df1b1e28a59bf~tplv-a9rns2rl98-image.image?rcl=2025110114033728C1FBDACDC9AB0E94F0&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1764569028&x-signature=VfL39E7PkDgfk5jYQAgMpeNxJ6E%3D" alt="敬请期待" class="w-full h-48 object-contain p-4 opacity-30">
           </div>
           <div class="p-4">
-            <h4 class="font-bold text-lg mb-1 text-gray-400">更多商品</h4>
-            <p class="text-gray-400 text-sm mb-4">即将上线，敬请期待</p>
+            <h4 class="font-bold text-lg mb-1">玩平板1小时</h4>
+            <p class="text-gray-600 text-sm mb-4">享受平板娱乐时光</p>
+            <button class="redeem-btn w-full bg-primary hover:bg-blue-600 text-white py-2 rounded-lg transition-colors">
+              兑换
+            </button>
           </div>
         </div>
 
@@ -291,34 +326,6 @@
             <p class="text-gray-400 text-sm mb-4">即将上线，敬请期待</p>
           </div>
         </div>
-
-        <!-- 商品5 - 敬请期待 -->
-        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
-          <div class="relative">
-            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
-              <span class="text-2xl font-bold text-gray-400">敬请期待</span>
-            </div>
-            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e68922eb55674479a5ee6513fcaa2fa9~tplv-a9rns2rl98-image.image?rcl=2025110114033728C1FBDACDC9AB0E94F0&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1764569028&x-signature=1MfYu180kkTldq%2Fz57jc7EfkP3U%3D" alt="敬请期待" class="w-full h-48 object-contain p-4 opacity-30">
-          </div>
-          <div class="p-4">
-            <h4 class="font-bold text-lg mb-1 text-gray-400">更多商品</h4>
-            <p class="text-gray-400 text-sm mb-4">即将上线，敬请期待</p>
-          </div>
-        </div>
-
-        <!-- 商品6 - 敬请期待 -->
-        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
-          <div class="relative">
-            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
-              <span class="text-2xl font-bold text-gray-400">敬请期待</span>
-            </div>
-            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/aecf4889eaa3419fac329ff2b018ad7d~tplv-a9rns2rl98-image.image?rcl=2025110114033728C1FBDACDC9AB0E94F0&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1764569030&x-signature=N8Zk8KJ%2F6UbFaE6rDDAD2PeG%2FiI%3D" alt="敬请期待" class="w-full h-48 object-contain p-4 opacity-30">
-          </div>
-          <div class="p-4">
-            <h4 class="font-bold text-lg mb-1 text-gray-400">更多商品</h4>
-            <p class="text-gray-400 text-sm mb-4">即将上线，敬请期待</p>
-          </div>
-        </div>
       </div>
     </section>
   </main>
@@ -326,7 +333,7 @@
   <!-- 页脚 -->
   <footer class="bg-dark text-white py-6">
     <div class="container mx-auto px-4 text-center">
-      <p>© 2025 积分兑换中心 | 所有权利保留</p>
+      <p>小艺老师积分兑换中心 | 所有权利均归小艺老师所有</p>
     </div>
   </footer>
 
@@ -334,7 +341,7 @@
     // 初始化变量
     let userPoints = 0;
     const POINTS_CODE = '666';
-    const STORAGE_KEY = 'points_exchange_system_user_points'; // 使用更具体的键名避免冲突
+    const STORAGE_KEY = 'points_exchange_system_user_points';
     
     // DOM元素
     const pointsDisplay = document.getElementById('points-display');
@@ -350,8 +357,6 @@
     const successModalContent = document.getElementById('success-modal-content');
     const successMessage = document.getElementById('success-message');
     const closeSuccessModalBtn = document.getElementById('close-success-modal');
-    const exportPointsBtn = document.getElementById('export-points-btn');
-    const importPointsBtn = document.getElementById('import-points-btn');
     
     // 从localStorage加载积分
     function loadPointsFromStorage() {
@@ -380,7 +385,6 @@
         return true;
       } catch (error) {
         console.error('Failed to save points to localStorage:', error);
-        // 如果localStorage保存失败，尝试更新URL参数
         updateUrlWithPoints();
         return false;
       }
@@ -407,55 +411,20 @@
       window.history.replaceState({}, '', url);
     }
     
-    // 导出积分数据
-    function exportPoints() {
-      const data = {
-        points: userPoints,
-        timestamp: Date.now(),
-        version: '1.0'
-      };
-      const dataStr = JSON.stringify(data);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-      
-      const exportFileDefaultName = 'points_data.json';
-      
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
-      
-      showToast('积分数据已导出', 'success');
-    }
-    
-    // 导入积分数据
-    function importPoints(event) {
-      const fileReader = new FileReader();
-      fileReader.onload = function(event) {
-        try {
-          const parsedData = JSON.parse(event.target.result);
-          if (parsedData && typeof parsedData.points !== undefined) {
-            userPoints = parsedData.points;
-            updatePointsDisplay();
-            updateUrlWithPoints();
-            showToast('积分数据导入成功！', 'success');
-          } else {
-            showToast('无效的数据文件！', 'error');
-          }
-        } catch (error) {
-          showToast('导入失败：' + error.message, 'error');
-        }
-      };
-      fileReader.readAsText(event.target.files[0]);
-      // 重置文件输入，以便可以再次选择同一文件
-      event.target.value = '';
-    }
-    
     // 更新积分显示
     function updatePointsDisplay() {
-      pointsDisplay.textContent = userPoints;
+      // 添加数字变化动画
+      const currentValue = parseInt(pointsDisplay.textContent);
+      if (currentValue !== userPoints) {
+        pointsDisplay.classList.add('transition-all', 'duration-500');
+        pointsDisplay.textContent = userPoints;
+        setTimeout(() => {
+          pointsDisplay.classList.remove('transition-all', 'duration-500');
+        }, 500);
+      }
       
       // 检查商品是否可兑换
-      document.querySelectorAll('.item-card').forEach(card => {
+      document.querySelectorAll('.item-card[data-cost]').forEach(card => {
         const cost = parseInt(card.dataset.cost);
         if (userPoints >= cost) {
           card.classList.remove('disabled');
@@ -464,16 +433,15 @@
         }
       });
       
-      // 保存积分到localStorage
       savePointsToStorage();
+      updateUrlWithPoints();
     }
     
     // 显示提示消息
     function showToast(message, type = 'info', duration = 3000) {
       toastMessage.textContent = message;
       
-      // 设置提示类型样式
-      toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-glass px-6 py-3 rounded-lg shadow-lg z-50';
+      toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-glass px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
       
       if (type === 'success') {
         toast.classList.add('border-l-4', 'border-success');
@@ -483,16 +451,40 @@
         toast.classList.add('border-l-4', 'border-warning');
       }
       
-      // 显示提示
-      toast.classList.remove('hidden');
+      toast.classList.remove('hidden', 'opacity-0');
+      toast.classList.add('opacity-100');
       
-      // 指定时间后隐藏
       setTimeout(() => {
-        toast.classList.add('hidden');
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 300);
       }, duration);
     }
     
-    // 积分动画
+    // 显示成功弹窗
+    function showSuccessModal(message) {
+      successMessage.textContent = message;
+      successModal.classList.remove('hidden');
+      
+      setTimeout(() => {
+        successModalContent.classList.remove('scale-95', 'opacity-0');
+        successModalContent.classList.add('scale-100', 'opacity-100', 'transition-all', 'duration-300');
+      }, 10);
+    }
+    
+    // 关闭成功弹窗
+    function closeSuccessModal() {
+      successModalContent.classList.remove('scale-100', 'opacity-100');
+      successModalContent.classList.add('scale-95', 'opacity-0', 'transition-all', 'duration-300');
+      
+      setTimeout(() => {
+        successModal.classList.add('hidden');
+      }, 300);
+    }
+    
+    // 积分增加动画
     function createPointsAnimation(x, y, points) {
       const pointsEl = document.createElement('div');
       pointsEl.className = 'points-animation';
@@ -501,7 +493,20 @@
       pointsEl.style.top = `${y}px`;
       document.body.appendChild(pointsEl);
       
-      // 动画结束后移除元素
+      setTimeout(() => {
+        document.body.removeChild(pointsEl);
+      }, 1000);
+    }
+    
+    // 积分扣除动画
+    function createPointsDeductAnimation(x, y, points) {
+      const pointsEl = document.createElement('div');
+      pointsEl.className = 'points-deduct-animation';
+      pointsEl.textContent = `-${points}`;
+      pointsEl.style.left = `${x}px`;
+      pointsEl.style.top = `${y}px`;
+      document.body.appendChild(pointsEl);
+      
       setTimeout(() => {
         document.body.removeChild(pointsEl);
       }, 1000);
@@ -511,7 +516,7 @@
     function createCelebration(x, y) {
       const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
       
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 30; i++) {
         const confetti = document.createElement('div');
         confetti.className = 'confetti';
         confetti.style.left = `${x}px`;
@@ -523,14 +528,12 @@
         confetti.style.animationDuration = `${Math.random() * 2 + 2}s`;
         confetti.style.animationDelay = `${Math.random() * 0.5}s`;
         
-        // 随机方向
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * 100 + 50;
         confetti.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
         
         document.body.appendChild(confetti);
         
-        // 动画结束后移除元素
         setTimeout(() => {
           document.body.removeChild(confetti);
         }, 5000);
@@ -555,17 +558,17 @@
       }
     });
     
-    // 提交兑换码
+    // 提交兑换码 - 修复并增强
     submitCodeBtn.addEventListener('click', () => {
       const code = codeInput.value.trim();
       
       if (code === POINTS_CODE) {
         // 增加积分
+        const oldPoints = userPoints;
         userPoints += 1;
-        updatePointsDisplay();
         
-        // 显示成功消息
-        showToast('积分增加成功！', 'success');
+        // 更新显示
+        updatePointsDisplay();
         
         // 创建积分动画
         const btnRect = redeemCodeBtn.getBoundingClientRect();
@@ -573,9 +576,22 @@
         const y = btnRect.top + btnRect.height / 2;
         createPointsAnimation(x, y, 1);
         
+        // 创建庆祝效果
+        createCelebration(x, y);
+        
+        // 显示成功弹窗
+        showSuccessModal('兑换码使用成功，获得1积分！');
+        
         // 关闭模态框
         codeModal.classList.add('hidden');
         codeInput.value = '';
+        
+        // 给积分显示添加动画效果
+        const pointsDisplayEl = document.getElementById('points-display');
+        pointsDisplayEl.classList.add('code-success-animation', 'text-success');
+        setTimeout(() => {
+          pointsDisplayEl.classList.remove('code-success-animation', 'text-success');
+        }, 1000);
       } else {
         // 显示错误消息
         showToast('兑换码无效，请重试！', 'error');
@@ -588,28 +604,6 @@
         submitCodeBtn.click();
       }
     });
-    
-    // 显示兑换成功弹窗
-    function showSuccessModal(message) {
-      successMessage.textContent = message;
-      successModal.classList.remove('hidden');
-      
-      // 添加动画效果
-      setTimeout(() => {
-        successModalContent.classList.remove('scale-95', 'opacity-0');
-        successModalContent.classList.add('scale-100', 'opacity-100');
-      }, 10);
-    }
-    
-    // 关闭兑换成功弹窗
-    function closeSuccessModal() {
-      successModalContent.classList.remove('scale-100', 'opacity-100');
-      successModalContent.classList.add('scale-95', 'opacity-0');
-      
-      setTimeout(() => {
-        successModal.classList.add('hidden');
-      }, 300);
-    }
     
     // 兑换商品
     redeemBtns.forEach(btn => {
@@ -641,7 +635,7 @@
       });
     });
     
-    // 关闭兑换成功弹窗
+    // 关闭成功弹窗
     closeSuccessModalBtn.addEventListener('click', closeSuccessModal);
     
     // 点击弹窗外部关闭
@@ -651,37 +645,55 @@
       }
     });
     
-    // 重置积分
-    function resetPoints() {
-      if (confirm('确定要重置所有积分吗？此操作不可撤销！')) {
-        userPoints = 0;
-        savePointsToStorage();
+    // 扣除积分功能 - 修复扣积分未生效问题
+    function deductPoints() {
+      if (userPoints <= 0) {
+        showToast('积分已为0，无法扣除！', 'error');
+        return;
+      }
+      
+      if (confirm('确定要扣除1积分吗？')) {
+        // 记录旧积分值用于验证
+        const oldPoints = userPoints;
+        
+        // 扣除积分
+        userPoints -= 1;
+        
+        // 强制更新显示并保存
         updatePointsDisplay();
-        showToast('积分已重置为0', 'warning');
+        
+        // 验证是否真的扣除成功
+        if (userPoints === oldPoints - 1) {
+          // 创建扣除动画
+          const btnRect = document.getElementById('deduct-points-btn').getBoundingClientRect();
+          const x = btnRect.left + btnRect.width / 2;
+          const y = btnRect.top + btnRect.height / 2;
+          createPointsDeductAnimation(x, y, 1);
+          
+          showToast('已成功扣除1积分', 'warning');
+        } else {
+          // 处理扣除失败的情况
+          userPoints = oldPoints; // 恢复原值
+          updatePointsDisplay();
+          showToast('扣除积分失败，请重试', 'error');
+        }
       }
     }
     
-    // 重置积分按钮点击事件
-    document.getElementById('reset-points-btn').addEventListener('click', resetPoints);
-    
-    // 导出/导入按钮点击事件
-    exportPointsBtn.addEventListener('click', exportPoints);
-    importPointsBtn.addEventListener('change', importPoints);
+    // 扣除积分按钮点击事件
+    document.getElementById('deduct-points-btn').addEventListener('click', deductPoints);
     
     // 初始化
-    // 优先从URL参数加载积分，如果失败则从localStorage加载
-    if (!loadPointsFromUrl()) {
-      loadPointsFromStorage();
+    if (!loadPointsFromStorage()) {
+      loadPointsFromUrl();
     }
     updatePointsDisplay();
-    // 更新URL参数，确保书签功能正常
-    updateUrlWithPoints();
     
-    // 检查是否是首次访问，如果是则显示使用提示
+    // 首次访问提示
     const firstVisit = localStorage.getItem('first_visit');
     if (!firstVisit) {
       setTimeout(() => {
-        showToast('在GitHub Pages上，您可以通过以下方式保存积分：1. 导出数据 2. 将页面添加到书签', 'info', 10000);
+        showToast('您可以通过兑换码获取积分，或使用积分兑换商品', 'info', 5000);
         localStorage.setItem('first_visit', 'false');
       }, 1000);
     }
