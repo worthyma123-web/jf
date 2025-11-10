@@ -179,6 +179,24 @@
         50% { transform: scale(1.1); }
         100% { transform: scale(1); }
       }
+      .item-badge {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        background: rgba(249, 115, 22, 0.9);
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-weight: bold;
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
     }
   </style>
 </head>
@@ -213,7 +231,7 @@
     <!-- 欢迎区域 -->
     <section class="text-center mb-12">
       <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-primary mb-4 text-shadow">欢迎来到积分兑换中心</h2>
-      <p class="text-gray-600 max-w-2xl mx-auto">输入兑换码获取积分，兑换丰富奖品！</p>
+      <p class="text-gray-600 max-w-2xl mx-auto">输入兑换码获取积分，兑换丰富奖品！积分足够即可无限次兑换</p>
     </section>
 
     <!-- 兑换码输入模态框 -->
@@ -227,7 +245,10 @@
         </div>
         <div class="mb-4">
           <label for="code-input" class="block text-gray-700 mb-2">兑换码</label>
-          <input type="text" id="code-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="请输入兑换码">
+          <input type="text" id="code-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="请输入兑换码（示例：666）">
+        </div>
+        <div class="text-sm text-gray-500 mb-4">
+          <i class="fa fa-info-circle mr-1"></i> 提示：使用兑换码"666"可获取1积分
         </div>
         <div class="flex justify-end">
           <button id="submit-code" class="bg-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
@@ -260,13 +281,19 @@
 
     <!-- 商品展示区域 -->
     <section class="mb-12">
-      <h3 class="text-2xl font-bold mb-6 flex items-center">
-        <i class="fa fa-gift text-secondary mr-2"></i>
-        可兑换商品
-      </h3>
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold flex items-center">
+          <i class="fa fa-gift text-secondary mr-2"></i>
+          可兑换商品
+        </h3>
+        <span class="text-sm text-gray-500">
+          <i class="fa fa-filter mr-1"></i> 共 <span id="available-items-count">0</span> 个可兑换商品
+        </span>
+      </div>
+      
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- 商品1 - 奶茶 -->
-        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden" data-cost="5">
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden fade-in" data-cost="5" data-id="1">
           <div class="relative">
             <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1355313085301391395~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1777529600&x-signature=vmPJh1Nu5uK6U6yJhwv0TBUrw5c%3D" alt="红豆奶茶" class="w-full h-48 object-contain p-4">
             <div class="absolute top-2 right-2 bg-secondary text-white text-xs font-bold px-2 py-1 rounded-full">
@@ -282,8 +309,8 @@
           </div>
         </div>
 
-        <!-- 新增商品 - 玩平板1小时 -->
-        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden" data-cost="10">
+        <!-- 商品2 - 玩平板1小时 -->
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden fade-in" data-cost="10" data-id="2" style="animation-delay: 0.1s">
           <div class="relative">
             <img src="https://picsum.photos/id/160/400/300" alt="玩平板1小时" class="w-full h-48 object-contain p-4">
             <div class="absolute top-2 right-2 bg-secondary text-white text-xs font-bold px-2 py-1 rounded-full">
@@ -300,7 +327,7 @@
         </div>
 
         <!-- 商品3 - 敬请期待 -->
-        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50 fade-in" style="animation-delay: 0.2s">
           <div class="relative">
             <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
               <span class="text-2xl font-bold text-gray-400">敬请期待</span>
@@ -314,7 +341,7 @@
         </div>
 
         <!-- 商品4 - 敬请期待 -->
-        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50">
+        <div class="item-card bg-white rounded-xl shadow-md overflow-hidden opacity-50 fade-in" style="animation-delay: 0.3s">
           <div class="relative">
             <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-t-xl">
               <span class="text-2xl font-bold text-gray-400">敬请期待</span>
@@ -334,6 +361,7 @@
   <footer class="bg-dark text-white py-6">
     <div class="container mx-auto px-4 text-center">
       <p>小艺老师积分兑换中心 | 所有权利均归小艺老师所有</p>
+      <p class="text-sm text-gray-400 mt-2">积分足够即可无限次兑换商品</p>
     </div>
   </footer>
 
@@ -357,6 +385,7 @@
     const successModalContent = document.getElementById('success-modal-content');
     const successMessage = document.getElementById('success-message');
     const closeSuccessModalBtn = document.getElementById('close-success-modal');
+    const availableItemsCount = document.getElementById('available-items-count');
     
     // 从localStorage加载积分
     function loadPointsFromStorage() {
@@ -423,15 +452,20 @@
         }, 500);
       }
       
-      // 检查商品是否可兑换
+      // 检查商品是否可兑换（仅根据积分判断，不限制兑换次数）
+      let availableCount = 0;
       document.querySelectorAll('.item-card[data-cost]').forEach(card => {
         const cost = parseInt(card.dataset.cost);
         if (userPoints >= cost) {
           card.classList.remove('disabled');
+          availableCount++;
         } else {
           card.classList.add('disabled');
         }
       });
+      
+      // 更新可用商品数量
+      availableItemsCount.textContent = availableCount;
       
       savePointsToStorage();
       updateUrlWithPoints();
@@ -558,7 +592,7 @@
       }
     });
     
-    // 提交兑换码 - 修复并增强
+    // 提交兑换码
     submitCodeBtn.addEventListener('click', () => {
       const code = codeInput.value.trim();
       
@@ -605,7 +639,7 @@
       }
     });
     
-    // 兑换商品
+    // 兑换商品 - 移除次数限制，积分够即可兑换
     redeemBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         const card = e.target.closest('.item-card');
@@ -623,11 +657,11 @@
           const y = btnRect.top + btnRect.height / 2;
           createCelebration(x, y);
           
-          // 禁用已兑换的商品
-          card.classList.add('disabled');
+          // 创建积分扣除动画
+          createPointsDeductAnimation(x, y, cost);
           
-          // 显示兑换成功弹窗
-          showSuccessModal(`恭喜您成功兑换${itemName}！`);
+          // 显示兑换成功弹窗（修改提示文案，强调可重复兑换）
+          showSuccessModal(`恭喜您成功兑换${itemName}！积分足够可再次兑换`);
         } else {
           // 显示错误消息
           showToast('积分不足，无法兑换！', 'error');
@@ -645,7 +679,7 @@
       }
     });
     
-    // 扣除积分功能 - 修复扣积分未生效问题
+    // 扣除积分功能
     function deductPoints() {
       if (userPoints <= 0) {
         showToast('积分已为0，无法扣除！', 'error');
@@ -693,7 +727,7 @@
     const firstVisit = localStorage.getItem('first_visit');
     if (!firstVisit) {
       setTimeout(() => {
-        showToast('您可以通过兑换码获取积分，或使用积分兑换商品', 'info', 5000);
+        showToast('您可以通过兑换码获取积分，或使用积分兑换商品（积分足够可无限次兑换）', 'info', 6000);
         localStorage.setItem('first_visit', 'false');
       }, 1000);
     }
